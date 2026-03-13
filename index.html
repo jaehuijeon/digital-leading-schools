@@ -266,100 +266,7 @@
   .school-list::-webkit-scrollbar-track { background: transparent; }
   .school-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 </style>
-<script src="https://d3js.org/d3.v7.min.js">
-// ====================================================
-// D3.js 한국 지도 렌더링
-// ====================================================
-(function initMap() {
-  const width = 380, height = 530;
-  const svg = d3.select('#koreaMap');
-
-  // GeoJSON 이름 → schoolData 키 매핑
-  const nameMap = {
-    '서울특별시': '서울특별시',
-    '부산광역시': '부산광역시',
-    '대구광역시': '대구광역시',
-    '인천광역시': '인천광역시',
-    '광주광역시': '광주광역시',
-    '대전광역시': '대전광역시',
-    '울산광역시': '울산광역시',
-    '세종특별자치시': '세종특별자치시',
-    '경기도': '경기도',
-    '강원도': '강원특별자치도',
-    '강원특별자치도': '강원특별자치도',
-    '충청북도': '충청북도',
-    '충청남도': '충청남도',
-    '전라북도': '전북특별자치도',
-    '전북특별자치도': '전북특별자치도',
-    '전라남도': '전라남도',
-    '경상북도': '경상북도',
-    '경상남도': '경상남도',
-    '제주특별자치도': '제주특별자치도',
-  };
-
-  // 표시용 짧은 이름
-  const shortName = {
-    '서울특별시': '서울', '부산광역시': '부산', '대구광역시': '대구',
-    '인천광역시': '인천', '광주광역시': '광주', '대전광역시': '대전',
-    '울산광역시': '울산', '세종특별자치시': '세종', '경기도': '경기도',
-    '강원특별자치도': '강원도', '충청북도': '충북', '충청남도': '충남',
-    '전북특별자치도': '전북', '전라남도': '전남', '경상북도': '경북',
-    '경상남도': '경남', '제주특별자치도': '제주도',
-  };
-
-  const geoUrl = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json';
-
-  fetch(geoUrl)
-    .then(r => r.json())
-    .then(geoJson => {
-      const projection = d3.geoMercator().fitSize([width, height - 10], geoJson);
-      const pathGen = d3.geoPath().projection(projection);
-
-      // 도형 그리기
-      svg.selectAll('path.province')
-        .data(geoJson.features)
-        .join('path')
-        .attr('class', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'province' + (schoolData[nm] ? ' has-data' : '');
-        })
-        .attr('id', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'province-' + nm;
-        })
-        .attr('d', pathGen)
-        .on('click', function(event, d) {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          if (schoolData[nm]) selectRegion(nm);
-        });
-
-      // 레이블 그리기
-      svg.selectAll('text.province-label')
-        .data(geoJson.features)
-        .join('text')
-        .attr('class', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'province-label' + (schoolData[nm] ? ' has-data' : '');
-        })
-        .attr('id', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'label-' + nm;
-        })
-        .attr('x', d => pathGen.centroid(d)[0])
-        .attr('y', d => pathGen.centroid(d)[1])
-        .attr('dy', '0.35em')
-        .text(d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return shortName[nm] || nm.substring(0, 2);
-        });
-    })
-    .catch(err => {
-      console.error('지도 로딩 실패:', err);
-      svg.append('text').attr('x', 190).attr('y', 265).attr('text-anchor', 'middle')
-        .text('지도 로딩 실패 - 인터넷 연결을 확인하세요').attr('fill', '#ef4444').attr('font-size', '12px');
-    });
-})();
-</script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 
@@ -564,6 +471,86 @@ function renderSchoolList(regionId) {
 
   listEl.innerHTML = html;
 }
+
+// ====================================================
+// D3.js 한국 지도 렌더링 (schoolData 정의 이후 실행)
+// ====================================================
+(function initMap() {
+  const width = 380, height = 530;
+  const svg = d3.select('#koreaMap');
+
+  const nameMap = {
+    '서울특별시': '서울특별시', '부산광역시': '부산광역시',
+    '대구광역시': '대구광역시', '인천광역시': '인천광역시',
+    '광주광역시': '광주광역시', '대전광역시': '대전광역시',
+    '울산광역시': '울산광역시', '세종특별자치시': '세종특별자치시',
+    '경기도': '경기도', '강원도': '강원특별자치도',
+    '강원특별자치도': '강원특별자치도', '충청북도': '충청북도',
+    '충청남도': '충청남도', '전라북도': '전북특별자치도',
+    '전북특별자치도': '전북특별자치도', '전라남도': '전라남도',
+    '경상북도': '경상북도', '경상남도': '경상남도',
+    '제주특별자치도': '제주특별자치도',
+  };
+
+  const shortName = {
+    '서울특별시': '서울', '부산광역시': '부산', '대구광역시': '대구',
+    '인천광역시': '인천', '광주광역시': '광주', '대전광역시': '대전',
+    '울산광역시': '울산', '세종특별자치시': '세종', '경기도': '경기도',
+    '강원특별자치도': '강원도', '충청북도': '충북', '충청남도': '충남',
+    '전북특별자치도': '전북', '전라남도': '전남', '경상북도': '경북',
+    '경상남도': '경남', '제주특별자치도': '제주도',
+  };
+
+  const geoUrl = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json';
+
+  fetch(geoUrl)
+    .then(r => r.json())
+    .then(geoJson => {
+      const projection = d3.geoMercator().fitSize([width, height - 10], geoJson);
+      const pathGen = d3.geoPath().projection(projection);
+
+      svg.selectAll('path.province')
+        .data(geoJson.features)
+        .join('path')
+        .attr('class', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province' + (schoolData[nm] ? ' has-data' : '');
+        })
+        .attr('id', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province-' + nm;
+        })
+        .attr('d', pathGen)
+        .on('click', function(event, d) {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          if (schoolData[nm]) selectRegion(nm);
+        });
+
+      svg.selectAll('text.province-label')
+        .data(geoJson.features)
+        .join('text')
+        .attr('class', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province-label' + (schoolData[nm] ? ' has-data' : '');
+        })
+        .attr('id', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'label-' + nm;
+        })
+        .attr('x', d => pathGen.centroid(d)[0])
+        .attr('y', d => pathGen.centroid(d)[1])
+        .attr('dy', '0.35em')
+        .text(d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return shortName[nm] || nm.substring(0, 2);
+        });
+    })
+    .catch(err => {
+      console.error('지도 로딩 실패:', err);
+      svg.append('text').attr('x', 190).attr('y', 265).attr('text-anchor', 'middle')
+        .text('지도 로딩 실패').attr('fill', '#ef4444').attr('font-size', '12px');
+    });
+})();
 </script>
 
 </body>
