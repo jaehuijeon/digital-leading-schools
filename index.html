@@ -266,6 +266,100 @@
   .school-list::-webkit-scrollbar-track { background: transparent; }
   .school-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 </style>
+<script src="https://d3js.org/d3.v7.min.js">
+// ====================================================
+// D3.js 한국 지도 렌더링
+// ====================================================
+(function initMap() {
+  const width = 380, height = 530;
+  const svg = d3.select('#koreaMap');
+
+  // GeoJSON 이름 → schoolData 키 매핑
+  const nameMap = {
+    '서울특별시': '서울특별시',
+    '부산광역시': '부산광역시',
+    '대구광역시': '대구광역시',
+    '인천광역시': '인천광역시',
+    '광주광역시': '광주광역시',
+    '대전광역시': '대전광역시',
+    '울산광역시': '울산광역시',
+    '세종특별자치시': '세종특별자치시',
+    '경기도': '경기도',
+    '강원도': '강원특별자치도',
+    '강원특별자치도': '강원특별자치도',
+    '충청북도': '충청북도',
+    '충청남도': '충청남도',
+    '전라북도': '전북특별자치도',
+    '전북특별자치도': '전북특별자치도',
+    '전라남도': '전라남도',
+    '경상북도': '경상북도',
+    '경상남도': '경상남도',
+    '제주특별자치도': '제주특별자치도',
+  };
+
+  // 표시용 짧은 이름
+  const shortName = {
+    '서울특별시': '서울', '부산광역시': '부산', '대구광역시': '대구',
+    '인천광역시': '인천', '광주광역시': '광주', '대전광역시': '대전',
+    '울산광역시': '울산', '세종특별자치시': '세종', '경기도': '경기도',
+    '강원특별자치도': '강원도', '충청북도': '충북', '충청남도': '충남',
+    '전북특별자치도': '전북', '전라남도': '전남', '경상북도': '경북',
+    '경상남도': '경남', '제주특별자치도': '제주도',
+  };
+
+  const geoUrl = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json';
+
+  fetch(geoUrl)
+    .then(r => r.json())
+    .then(geoJson => {
+      const projection = d3.geoMercator().fitSize([width, height - 10], geoJson);
+      const pathGen = d3.geoPath().projection(projection);
+
+      // 도형 그리기
+      svg.selectAll('path.province')
+        .data(geoJson.features)
+        .join('path')
+        .attr('class', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province' + (schoolData[nm] ? ' has-data' : '');
+        })
+        .attr('id', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province-' + nm;
+        })
+        .attr('d', pathGen)
+        .on('click', function(event, d) {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          if (schoolData[nm]) selectRegion(nm);
+        });
+
+      // 레이블 그리기
+      svg.selectAll('text.province-label')
+        .data(geoJson.features)
+        .join('text')
+        .attr('class', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'province-label' + (schoolData[nm] ? ' has-data' : '');
+        })
+        .attr('id', d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return 'label-' + nm;
+        })
+        .attr('x', d => pathGen.centroid(d)[0])
+        .attr('y', d => pathGen.centroid(d)[1])
+        .attr('dy', '0.35em')
+        .text(d => {
+          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          return shortName[nm] || nm.substring(0, 2);
+        });
+    })
+    .catch(err => {
+      console.error('지도 로딩 실패:', err);
+      svg.append('text').attr('x', 190).attr('y', 265).attr('text-anchor', 'middle')
+        .text('지도 로딩 실패 - 인터넷 연결을 확인하세요').attr('fill', '#ef4444').attr('font-size', '12px');
+    });
+})();
+</script>
 </head>
 <body>
 
@@ -279,111 +373,7 @@
   <!-- MAP PANEL -->
   <div class="map-panel">
     <h2>시·도 선택</h2>
-    <svg id="koreaMap" viewBox="0 0 380 530" xmlns="http://www.w3.org/2000/svg">
-
-      <!-- 경기도 -->
-      <polygon class="province" id="경기도"
-        points="80,68 105,48 165,52 198,75 202,148 160,168 145,165 108,165 82,148 50,128 55,95 80,90"
-        title="경기도"/>
-      <text class="province-label" x="140" y="112">경기도</text>
-
-      <!-- 강원특별자치도 (HAS DATA) -->
-      <polygon class="province has-data" id="강원특별자치도"
-        points="198,52 202,148 230,168 260,185 335,165 350,140 362,80 340,30 198,30"
-        title="강원특별자치도"/>
-      <text class="province-label has-data" x="278" y="105">강원특별자치도</text>
-
-      <!-- 인천광역시 (HAS DATA) -->
-      <polygon class="province has-data" id="인천광역시"
-        points="50,90 82,78 82,148 62,162 45,140 42,112"
-        title="인천광역시"/>
-      <text class="province-label has-data" x="60" y="123">인천</text>
-
-      <!-- 서울특별시 -->
-      <polygon class="province" id="서울특별시"
-        points="105,95 148,90 152,125 108,130"
-        title="서울특별시"/>
-      <text class="province-label" x="128" y="113">서울</text>
-
-      <!-- 충청북도 -->
-      <polygon class="province" id="충청북도"
-        points="165,168 202,148 260,185 262,240 232,268 195,272 162,262 158,225"
-        title="충청북도"/>
-      <text class="province-label" x="210" y="220">충청북도</text>
-
-      <!-- 충청남도 (HAS DATA) -->
-      <polygon class="province has-data" id="충청남도"
-        points="40,155 112,165 145,165 158,225 130,270 88,282 44,265 32,232 38,185"
-        title="충청남도"/>
-      <text class="province-label has-data" x="92" y="222">충청남도</text>
-
-      <!-- 세종특별자치시 -->
-      <polygon class="province" id="세종특별자치시"
-        points="152,228 168,222 172,245 155,250"
-        title="세종특별자치시"/>
-      <text class="province-label" x="162" y="242">세종</text>
-
-      <!-- 대전광역시 -->
-      <polygon class="province" id="대전광역시"
-        points="160,255 195,248 198,272 165,278"
-        title="대전광역시"/>
-      <text class="province-label" x="180" y="268">대전</text>
-
-      <!-- 전북특별자치도 -->
-      <polygon class="province" id="전북특별자치도"
-        points="82,282 130,270 162,262 235,268 248,315 192,335 92,335 65,312 68,292"
-        title="전북특별자치도"/>
-      <text class="province-label" x="158" y="308">전북특별자치도</text>
-
-      <!-- 경상북도 (HAS DATA) -->
-      <polygon class="province has-data" id="경상북도"
-        points="235,185 260,185 262,240 305,222 335,175 352,150 362,80 352,178 355,275 318,308 265,315 248,315 248,270 225,265"
-        title="경상북도"/>
-      <text class="province-label has-data" x="308" y="238">경상북도</text>
-
-      <!-- 대구광역시 -->
-      <polygon class="province" id="대구광역시"
-        points="265,275 308,268 315,302 272,308"
-        title="대구광역시"/>
-      <text class="province-label" x="290" y="292">대구</text>
-
-      <!-- 전라남도 (HAS DATA) -->
-      <polygon class="province has-data" id="전라남도"
-        points="55,335 92,335 192,335 215,372 175,425 88,430 48,405 40,368"
-        title="전라남도"/>
-      <text class="province-label has-data" x="130" y="385">전라남도</text>
-
-      <!-- 광주광역시 -->
-      <polygon class="province" id="광주광역시"
-        points="108,346 136,343 140,365 112,368"
-        title="광주광역시"/>
-      <text class="province-label" x="124" y="360">광주</text>
-
-      <!-- 경상남도 -->
-      <polygon class="province" id="경상남도"
-        points="198,340 248,330 318,308 355,355 318,388 215,385 188,368 195,350"
-        title="경상남도"/>
-      <text class="province-label" x="268" y="360">경상남도</text>
-
-      <!-- 울산광역시 -->
-      <polygon class="province" id="울산광역시"
-        points="340,278 362,272 368,335 348,352 322,325"
-        title="울산광역시"/>
-      <text class="province-label" x="348" y="312">울산</text>
-
-      <!-- 부산광역시 -->
-      <polygon class="province" id="부산광역시"
-        points="318,355 358,350 362,388 322,392"
-        title="부산광역시"/>
-      <text class="province-label" x="340" y="375">부산</text>
-
-      <!-- 제주특별자치도 -->
-      <polygon class="province" id="제주특별자치도"
-        points="68,478 148,470 155,510 72,518"
-        title="제주특별자치도"/>
-      <text class="province-label" x="112" y="498">제주도</text>
-
-    </svg>
+    <svg id="koreaMap" viewBox="0 0 380 530" xmlns="http://www.w3.org/2000/svg"></svg>
 
     <div class="legend">
       <div class="legend-item">
@@ -455,34 +445,22 @@ function normalizeLevel(raw) {
 }
 
 // ====================================================
-// 지도 클릭 이벤트
-// ====================================================
-document.querySelectorAll('.province.has-data').forEach(el => {
-  el.addEventListener('click', () => selectRegion(el.id));
-});
+
 
 function selectRegion(regionId) {
   // 이전 선택 해제
-  document.querySelectorAll('.province').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.province-label').forEach(el => el.classList.remove('selected'));
+  d3.selectAll('.province').classed('selected', false);
+  d3.selectAll('.province-label').classed('selected', false);
 
   // 새 선택
-  const el = document.getElementById(regionId);
-  if (!el) return;
-  el.classList.add('selected');
-
-  // 레이블도 선택 표시
-  const labels = document.querySelectorAll('.province-label');
-  labels.forEach(lb => {
-    if (lb.textContent.includes(regionId.replace('특별자치도','').replace('광역시','').replace('특별시','').replace('도','').replace('자치','').replace('특별','').replace('특','').substring(0,2))) {
-      lb.classList.add('selected');
-    }
-  });
+  d3.select('#province-' + CSS.escape(regionId)).classed('selected', true);
+  d3.select('#label-' + CSS.escape(regionId)).classed('selected', true);
 
   selectedRegion = regionId;
   currentFilter = '전체';
   currentSearch = '';
-  document.getElementById('searchInput') && (document.getElementById('searchInput').value = '');
+  const si = document.getElementById('searchInput');
+  if (si) si.value = '';
   resetFilterButtons();
   renderInfo(regionId);
 }
