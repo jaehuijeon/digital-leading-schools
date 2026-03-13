@@ -479,17 +479,15 @@ function renderSchoolList(regionId) {
   const width = 380, height = 530;
   const svg = d3.select('#koreaMap');
 
-  const nameMap = {
-    '서울특별시': '서울특별시', '부산광역시': '부산광역시',
-    '대구광역시': '대구광역시', '인천광역시': '인천광역시',
-    '광주광역시': '광주광역시', '대전광역시': '대전광역시',
-    '울산광역시': '울산광역시', '세종특별자치시': '세종특별자치시',
-    '경기도': '경기도', '강원도': '강원특별자치도',
-    '강원특별자치도': '강원특별자치도', '충청북도': '충청북도',
-    '충청남도': '충청남도', '전라북도': '전북특별자치도',
-    '전북특별자치도': '전북특별자치도', '전라남도': '전라남도',
-    '경상북도': '경상북도', '경상남도': '경상남도',
-    '제주특별자치도': '제주특별자치도',
+  // name_eng → schoolData 키 매핑
+  const engToKr = {
+    'Seoul': '서울특별시', 'Busan': '부산광역시', 'Daegu': '대구광역시',
+    'Incheon': '인천광역시', 'Gwangju': '광주광역시', 'Daejeon': '대전광역시',
+    'Ulsan': '울산광역시', 'Sejongsi': '세종특별자치시', 'Gyeonggi-do': '경기도',
+    'Gangwon-do': '강원특별자치도', 'Chungcheongbuk-do': '충청북도',
+    'Chungcheongnam-do': '충청남도', 'Jeollabuk-do': '전북특별자치도',
+    'Jeollanam-do': '전라남도', 'Gyeongsangbuk-do': '경상북도',
+    'Gyeongsangnam-do': '경상남도', 'Jeju-do': '제주특별자치도',
   };
 
   const shortName = {
@@ -501,9 +499,7 @@ function renderSchoolList(regionId) {
     '경상남도': '경남', '제주특별자치도': '제주도',
   };
 
-  const geoUrl = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-geo.json';
-
-  fetch(geoUrl)
+  fetch('./korea-provinces.json')
     .then(r => r.json())
     .then(geoJson => {
       const projection = d3.geoMercator().fitSize([width, height - 10], geoJson);
@@ -513,36 +509,36 @@ function renderSchoolList(regionId) {
         .data(geoJson.features)
         .join('path')
         .attr('class', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'province' + (schoolData[nm] ? ' has-data' : '');
+          const nm = engToKr[d.properties.name_eng] || '';
+          return 'province' + (nm && schoolData[nm] ? ' has-data' : '');
         })
         .attr('id', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          const nm = engToKr[d.properties.name_eng] || '';
           return 'province-' + nm;
         })
         .attr('d', pathGen)
         .on('click', function(event, d) {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          if (schoolData[nm]) selectRegion(nm);
+          const nm = engToKr[d.properties.name_eng] || '';
+          if (nm && schoolData[nm]) selectRegion(nm);
         });
 
       svg.selectAll('text.province-label')
         .data(geoJson.features)
         .join('text')
         .attr('class', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return 'province-label' + (schoolData[nm] ? ' has-data' : '');
+          const nm = engToKr[d.properties.name_eng] || '';
+          return 'province-label' + (nm && schoolData[nm] ? ' has-data' : '');
         })
         .attr('id', d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
+          const nm = engToKr[d.properties.name_eng] || '';
           return 'label-' + nm;
         })
         .attr('x', d => pathGen.centroid(d)[0])
         .attr('y', d => pathGen.centroid(d)[1])
         .attr('dy', '0.35em')
         .text(d => {
-          const nm = nameMap[d.properties.CTP_KOR_NM] || d.properties.CTP_KOR_NM;
-          return shortName[nm] || nm.substring(0, 2);
+          const nm = engToKr[d.properties.name_eng] || '';
+          return shortName[nm] || d.properties.name_eng.substring(0, 4);
         });
     })
     .catch(err => {
