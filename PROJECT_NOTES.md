@@ -127,4 +127,37 @@ function renderInfo(regionId) { ... }
 
 ---
 
+## 🧪 개발 방식: Test-Driven Development (TDD)
+
+새 기능을 추가할 때는 아래 TDD 사이클을 따른다:
+
+1. **Red** - 실패하는 테스트 먼저 작성
+2. **Green** - 테스트를 통과하는 최소한의 코드 작성
+3. **Refactor** - 코드 정리 (동작은 그대로 유지)
+
+### 이 프로젝트에서의 TDD 체크리스트
+
+새 지역 데이터 추가 시:
+- [ ] 지역 이름이 `schoolData` 키에 존재하는가?
+- [ ] 각 학교 객체에 `학교명`, `학교급`, `지역` 필드가 있는가?
+- [ ] `sourceData`에 해당 지역 출처 URL이 추가됐는가?
+- [ ] 지도에서 해당 지역을 클릭했을 때 학교 목록이 뜨는가?
+- [ ] 학교급 필터(초/중/고/특)가 정상 동작하는가?
+- [ ] 학교명 검색이 정상 동작하는가?
+- [ ] 출처 링크가 표시되고 클릭 시 교육청 홈페이지로 이동하는가?
+
+### 브라우저 콘솔에서 빠르게 확인하는 법
+```javascript
+// 특정 지역 데이터 개수 확인
+Object.keys(schoolData).map(k => `${k}: ${schoolData[k].length}개`)
+
+// sourceData 누락 지역 확인
+Object.keys(schoolData).filter(k => !sourceData[k])
+
+// 학교급 필드 누락된 학교 확인
+Object.values(schoolData).flat().filter(s => !s.학교급)
+```
+
+---
+
 *마지막 업데이트: 2026-03-13*
